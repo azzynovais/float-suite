@@ -23,17 +23,20 @@ env:
   ELECTRON_BUILDER_VERSION: '24.13.3'
 
 jobs:
-  # ─────────────────────────────────────────────────────────────────────
-  # Linux: .deb · .rpm · .pacman · .AppImage  (3 apps in parallel)
-  # ─────────────────────────────────────────────────────────────────────
   build-linux:
-    name: Linux — ${{ matrix.app }}
+    name: Linux — ${{ matrix.displayName }}
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        app: [paint, inkling, thesis]
+        include:
+          - app: paint
+            displayName: Paint Web
+          - app: inkling
+            displayName: Inkling
+          - app: thesis
+            displayName: Thesis
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,7 +55,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y dpkg rpm libarchive-tools
 
-      - name: Build ${{ matrix.app }} for Linux
+      - name: Build ${{ matrix.displayName }} for Linux
         run: npx --yes electron-builder@${{ env.ELECTRON_BUILDER_VERSION }} --linux deb rpm pacman AppImage --config apps/${{ matrix.app }}.json --publish never
         env:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
@@ -66,7 +69,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: float-suite-linux-${{ matrix.app }}
+          name: ${{ matrix.displayName }}-linux
           path: |
             electron/dist/${{ matrix.app }}/*.deb
             electron/dist/${{ matrix.app }}/*.rpm
@@ -75,17 +78,20 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-  # ─────────────────────────────────────────────────────────────────────
-  # macOS: .dmg  (3 apps in parallel)
-  # ─────────────────────────────────────────────────────────────────────
   build-macos:
-    name: macOS — ${{ matrix.app }}
+    name: macOS — ${{ matrix.displayName }}
     runs-on: macos-15
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        app: [paint, inkling, thesis]
+        include:
+          - app: paint
+            displayName: Paint Web
+          - app: inkling
+            displayName: Inkling
+          - app: thesis
+            displayName: Thesis
     env:
       HAS_MAC_CERT: ${{ secrets.MAC_CERTIFICATE != '' }}
     steps:
@@ -101,7 +107,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build ${{ matrix.app }} for macOS (unsigned)
+      - name: Build ${{ matrix.displayName }} for macOS (unsigned)
         if: ${{ env.HAS_MAC_CERT != 'true' }}
         shell: bash
         run: |
@@ -111,7 +117,7 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
 
-      - name: Build ${{ matrix.app }} for macOS (signed + notarized)
+      - name: Build ${{ matrix.displayName }} for macOS (signed + notarized)
         if: ${{ env.HAS_MAC_CERT == 'true' }}
         run: npx --yes electron-builder@${{ env.ELECTRON_BUILDER_VERSION }} --mac dmg --config apps/${{ matrix.app }}.json --publish never
         env:
@@ -131,23 +137,26 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: float-suite-macos-${{ matrix.app }}
+          name: ${{ matrix.displayName }}-macos
           path: |
             electron/dist/${{ matrix.app }}/*.dmg
           if-no-files-found: warn
           retention-days: 30
 
-  # ─────────────────────────────────────────────────────────────────────
-  # Windows: .exe  (3 apps in parallel)
-  # ─────────────────────────────────────────────────────────────────────
   build-windows:
-    name: Windows — ${{ matrix.app }}
+    name: Windows — ${{ matrix.displayName }}
     runs-on: windows-2022
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        app: [paint, inkling, thesis]
+        include:
+          - app: paint
+            displayName: Paint Web
+          - app: inkling
+            displayName: Inkling
+          - app: thesis
+            displayName: Thesis
     env:
       HAS_WIN_CERT: ${{ secrets.WIN_CERTIFICATE != '' }}
     steps:
@@ -163,7 +172,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build ${{ matrix.app }} for Windows (unsigned)
+      - name: Build ${{ matrix.displayName }} for Windows (unsigned)
         if: ${{ env.HAS_WIN_CERT != 'true' }}
         shell: bash
         run: |
@@ -172,7 +181,7 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
 
-      - name: Build ${{ matrix.app }} for Windows (signed)
+      - name: Build ${{ matrix.displayName }} for Windows (signed)
         if: ${{ env.HAS_WIN_CERT == 'true' }}
         run: npx --yes electron-builder@${{ env.ELECTRON_BUILDER_VERSION }} --win nsis portable --config apps/${{ matrix.app }}.json --publish never
         env:
@@ -190,16 +199,11 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: float-suite-windows-${{ matrix.app }}
+          name: ${{ matrix.displayName }}-windows
           path: |
             electron/dist/${{ matrix.app }}/*.exe
           if-no-files-found: warn
           retention-days: 30
-
-  # ─────────────────────────────────────────────────────────────────────
-  # Release: when triggered by a tag (v5.1.0 etc.), create a GitHub
-  # release and attach all artifacts from all 3 apps × 3 platforms.
-  # ─────────────────────────────────────────────────────────────────────
   release:
     name: Publish Release
     needs: [build-linux, build-macos, build-windows]
