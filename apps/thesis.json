@@ -17,6 +17,7 @@
   "linux": {
     "icon": "favicons/thesis-512.png",
     "category": "Office",
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
     "target": [
       {
         "target": "deb",
@@ -65,7 +66,8 @@
       "libxtst6",
       "libnss3"
     ],
-    "category": "Office"
+    "category": "Office",
+    "artifactName": "${productName}-${version}-${arch}.deb"
   },
   "rpm": {
     "depends": [
@@ -73,7 +75,8 @@
       "libXtst",
       "nss"
     ],
-    "category": "Office"
+    "category": "Office",
+    "artifactName": "${productName}-${version}-${arch}.rpm"
   },
   "mac": {
     "icon": "favicons/thesis-512.png",

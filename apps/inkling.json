@@ -17,6 +17,7 @@
   "linux": {
     "icon": "favicons/inkling-512.png",
     "category": "Graphics",
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
     "target": [
       {
         "target": "deb",
@@ -65,7 +66,8 @@
       "libxtst6",
       "libnss3"
     ],
-    "category": "Graphics"
+    "category": "Graphics",
+    "artifactName": "${productName}-${version}-${arch}.deb"
   },
   "rpm": {
     "depends": [
@@ -73,7 +75,8 @@
       "libXtst",
       "nss"
     ],
-    "category": "Graphics"
+    "category": "Graphics",
+    "artifactName": "${productName}-${version}-${arch}.rpm"
   },
   "mac": {
     "icon": "favicons/inkling-512.png",
